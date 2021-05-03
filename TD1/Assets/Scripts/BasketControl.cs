@@ -12,7 +12,7 @@ public class BasketControl : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        // Keyboard controlled
+        // Keyboard control
         if (Input.GetKey(KeyCode.RightArrow)) transform.Translate(space * Time.deltaTime, 0, 0);
         if (Input.GetKey(KeyCode.LeftArrow)) transform.Translate(-space * Time.deltaTime, 0, 0);
     }

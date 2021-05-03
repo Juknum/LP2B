@@ -1,6 +1,9 @@
 */Library/*
 */ProjectSettings/*
 */Logs/*
+*/Temp/*
+*/Packages/*
+*/UserSettings/*
 *.meta
 *.log
 *.unity
