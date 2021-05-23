@@ -3,15 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Paddle : MonoBehaviour {
-  public float space = 4f;
-  public float maxWidth = 8.3f;
+  public float speed;
+  public float rightScreenEdge;
+  public float leftScreenEdge;
+  public GameManager gm;
+
   void Start() {}
 
   // Update is called once per frame
   void Update() {
-    // Keyboard control
-    if (Input.GetKey(KeyCode.RightArrow) && transform.position.x < maxWidth/2) transform.Translate(space * Time.deltaTime, 0, 0);
-    if (Input.GetKey(KeyCode.LeftArrow) && transform.position.x > -maxWidth/2 ) transform.Translate(-space * Time.deltaTime, 0, 0);
+    if (gm.gameOver) return;
+
+    // Velocity management
+    float horizontal = Input.GetAxis("Horizontal");
+    transform.Translate(Vector2.right * horizontal * Time.deltaTime * speed);
+
+    // Check if the paddle is outside the boundaries
+    if (transform.position.x < leftScreenEdge) {
+      transform.position = new Vector2(leftScreenEdge, transform.position.y);
+    }
+    if (transform.position.x > rightScreenEdge) {
+      transform.position = new Vector2(rightScreenEdge, transform.position.y);
+    }
+
   }
 
   

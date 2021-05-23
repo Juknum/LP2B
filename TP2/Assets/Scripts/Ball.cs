@@ -4,53 +4,74 @@ using UnityEngine;
 using TMPro;
 
 public class Ball : MonoBehaviour {
-  public TextMeshPro DisplayedText;
-  public int score = 0;
-  private float resetTimer = 0f;
-  private bool isBeingReset = false;
+  public Rigidbody2D rb;
+  public bool inPlay;
+  public Transform paddle;
+  public float speed;
+  public GameManager gm;
+  AudioSource audio;
+
+  public AudioClip bouncePad;
+  public AudioClip bounceWall;
+  public AudioClip gameOver;
+  public AudioClip gameStart;
+  public AudioClip pointWin;
+  public AudioClip pointLoss;
+  public float audioVolume;
 
   // Start is called before the first frame update
-  void Start() {}
-
-  // Update is called once per frame
+  void Start() {
+    rb = GetComponent<Rigidbody2D>();
+    audio = GetComponent<AudioSource>();
+  }
+  
   void Update() {
-    resetTimer += Time.deltaTime;
+    if (gm.gameOver) return;
 
-    if (resetTimer < 2f && isBeingReset) {
-      gameObject.transform.position = new Vector2(0, -1);
-      GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+    // if the ball isn't moving (not played), then ball follow the paddle
+    if (!inPlay) {
+      transform.position = paddle.position;
+      
     }
-    else {
-      resetTimer = 0f;
-      isBeingReset = false;
+
+    // space bar trigger to starts to play
+    if (Input.GetButtonDown("Jump") && !inPlay) {
+      SetInPlay(true);
+      rb.AddForce(Vector2.up * speed);
+      if (gm.GetScore() == 0) audio.PlayOneShot(gameStart, audioVolume);
     }
   }
 
-  private void OnBecameInvisible() {
-    resetTimer = 0f;
-    score = score - 500 > 0 ? score - 500 : 0;
+  public void SetInPlay(bool that) {
+    // if the ball keep it's momentum
+    if (!that) rb.velocity = Vector2.zero;
 
-    DisplayedText.SetText("Score: " + score);
-    isBeingReset = true;
+    this.inPlay = that;
   }
 
-  private void OnCollisionEnter2D(Collision2D col) {
+  // If the ball hit a trigger collider (the ground collider)
+  void OnTriggerEnter2D(Collider2D other) {
+    if (other.CompareTag("Ground")) {
 
-    if (col.gameObject.name == "Brick" || col.gameObject.name == "Brick(Clone)") {
-      score += 50;
-      Debug.Log("Current score:" + score);
-      Destroy(col.gameObject);
+      // set the ball back on top of the paddle
+      SetInPlay(false);
 
-      DisplayedText.SetText("Score: " + score);
-
-      GameMaster.setReportBrickDeath(GameMaster.ReportBrickDeath() - 1);
-      Debug.Log(GameMaster.ReportBrickDeath());
+      gm.UpdateScore(-500);
+      audio.PlayOneShot(pointLoss, audioVolume);
+      if (gm.GetScore() == 0) audio.PlayOneShot(gameOver, audioVolume);
     }
+  }
 
-    if (col.gameObject.name == "Paddle") {
+  void OnCollisionEnter2D(Collision2D other) {
+    if (other.transform.CompareTag("Brick")) {
+      gm.UpdateScore(50);
+      gm.UpdateBricksCount(-1);
+      Destroy(other.gameObject);
 
-      float diffX = gameObject.transform.position.x - col.gameObject.transform.position.x;
-      GetComponent<Rigidbody2D>().velocity += new Vector2(diffX * 3, 0);
+      audio.PlayOneShot(bouncePad, audioVolume);
+      audio.PlayOneShot(pointWin, audioVolume);
     }
+    if (other.transform.CompareTag("Paddle")) audio.PlayOneShot(bouncePad, audioVolume);
+    if (other.transform.CompareTag("Wall")) audio.PlayOneShot(bounceWall, audioVolume);
   }
 }
